@@ -1,27 +1,24 @@
 #!/bin/bash 
 
 make_direct() {
-	if [ ! -d todo ]; then 
-		mkdir ~/todo
-		touch ~/todo/TODO.txt
-		chmod ~/todo/TODO.txt
+	if [ ! -d todo ]; then
+		cd ~/linuxHW 
+		mkdir todo
 	fi
 	
 	if [ ! -d complete ]; then 
-		mkdir ~/complete
-		touch ~/complete/COMPLETE.txt
-		chmod ~/complete/COMPLETE.txt
+		cd ~/linuxHW	
+		mkdir complete
 	fi
 }
 make_direct
 
 menu_func () { 
  	list_func
-	add_todo
-	add_complete
 }
 
 list_func() { 
+	display_item
 	echo -e "\nWhat would you like to do?"
 	echo "More information"
 	echo "A. item is complete"
@@ -32,53 +29,80 @@ list_func() {
 }
 
 add_todo() {
-echo $((count_file))
-COUNTER=$((count_file))
-	while [ $COUNTER -gt 0 ]; do
-		touch $COUNTER
-		chmod 700 $COUNTER
-		echo "$1" >> ~/todo/$COUNTER.txt
-		echo "$2" >> ~/todo/$COUNTER.txt
-	break
-done
+COUNTER=$(count_file)
+COUNTER=$((COUNTER+1))
+echo $COUNTER
+		touch todo/$COUNTER.txt
+		chmod 700 todo/$COUNTER.txt
+		echo "$1" >> todo/$COUNTER.txt
+		echo "$2" >> todo/$COUNTER.txt
 }
 
 add_complete() {
-	mv "$1.txt" >> ~/complete/"*.txt"
+cd todo
+pwd
+C=$1
+i=0
+	for f in *.txt; do
+		i=$((i+1))
+	if [[ $i == $C ]]; then
+		mv "$C.txt" "../complete/$C.txt"
+	fi
+	done
+cd ..
+display_complete
 }
 
-#more_info(){ 
-	#reads off every thing in the file }
-
 display_item() {
-COUNT=$((COUNT+1))
-
-COUNTER=$((COUNTER+1))
-	echo "Current items in list "
-	while [ $COUNT -gt 0 ]; do
-		echo $COUNT
-		cat ./todo/$COUNTER.txt  
-	break
-	done 
+cd todo
+	echo "Current items in todo list "
+	file=$(ls *.txt)
+	for f in $file; do
+		echo $f	
+		echo $(head -n 1 $f)
+	done	
+cd ..
 }
 
 display_complete() {
-	echo "Currecnt items complete "
-	while IFS= read -r line; do
-		echo $line
-	done < ~/complete/COMPLETE.txt
+cd complete
+	echo "Currecnt items complete list "
+	file=$(ls *.txt)
+	for f in $file; do
+		echo $f
+		echo $(head -n 1 $f)
+	done
+cd ..
+}
+
+more_info() {
+cd todo 
+	echo "File contents in todo list"
+	file=$(ls *.txt)
+	for f in $file; do
+		echo $f
+		cat $f
+	done
+cd ..
+
+cd complete
+
+	echo "File contents in complete list"
+	file=$(ls *.txt)
+	for f in $file; do
+		echo $f
+		cat $f
+	done
+cd ..
 }
 
 task_input() {
 read -p "List a task " TASK
 	if [ $TASK == "A" ]; then
-		if [ $((COUNT)) > 0 ]; then
-		display_item 
-		echo $COUNTER	
-	read -p "Which item is complete? " C
-			if [ $C == "$COUNTER" ]; then
-		add_complete $C
-		fi	
+	 echo $(count_file) items exits	
+	 read -p "Which item is complete? " C
+			if [ $C -gt 0 ]; then
+		add_complete $C	
 	fi
 	elif [ $TASK == "B" ]; then
 		read -p "Task? " TITLE
@@ -89,8 +113,11 @@ read -p "List a task " TASK
 		display_complete
 	elif [ $TASK == "Q" ]; then
 		exit
+	elif [ $TASK == "M" ]; then
+		more_info
 	else 
 		echo "ERROR"  
+		help
 fi
 }
 
@@ -98,15 +125,21 @@ fi
 	#counts complete tasks }
 
 count_file() {	
-	FILECOUNT=$(ls todo | wc -l)
+	FILECOUNT=$(ls ./todo | wc -l)
 echo $FILECOUNT
- }
+}
+
+help(){
+	echo HELP INTERFACE
+	echo ENTER A, B, C, OR Q TO FOLLOW COMMANDS
+	echo ENTER M TO SEE ALL FILES AND DESCRIPTIONS
+	list_func
+}
 
 display_menu(){
 	list_func
 	task_input
-	more_info
 }
 
 menu_func
-display_menu
+display_menu 
